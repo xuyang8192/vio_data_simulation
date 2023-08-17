@@ -101,4 +101,7 @@ for i in range(0,400,5):
     ax.legend()
     plt.show() 
     plt.pause(0.01)
-    
+
+while True:
+    plt.show()
+    plt.pause(1.0)

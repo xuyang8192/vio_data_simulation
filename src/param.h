@@ -23,10 +23,12 @@ public:
 
     // noise
     double gyro_bias_sigma = 1.0e-5;
-    double acc_bias_sigma = 0.0001;
+    double acc_bias_sigma  = 0.0001;
+    double mag_bias_sigma  = 0.0002;
 
-    double gyro_noise_sigma = 0.015;    // rad/s * 1/sqrt(hz)
-    double acc_noise_sigma = 0.019;      //　m/(s^2) * 1/sqrt(hz)
+    double gyro_noise_sigma = 0.015; // rad/s * 1/sqrt(hz)
+    double acc_noise_sigma  = 0.019; // m/(s^2) * 1/sqrt(hz)
+    double mag_noise_sigma  = 0.035; // Currently a casual value...
 
     double pixel_noise = 1;              // 1 pixel noise
 

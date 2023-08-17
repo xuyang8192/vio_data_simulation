@@ -20,9 +20,11 @@ struct MotionData
     Eigen::Vector3d twb;
     Eigen::Vector3d imu_acc;
     Eigen::Vector3d imu_gyro;
+    Eigen::Vector3d imu_mag;
 
     Eigen::Vector3d imu_gyro_bias;
     Eigen::Vector3d imu_acc_bias;
+    Eigen::Vector3d imu_mag_bias;
 
     Eigen::Vector3d imu_velocity;
 };
@@ -39,6 +41,7 @@ public:
     Param param_;
     Eigen::Vector3d gyro_bias_;
     Eigen::Vector3d acc_bias_;
+    Eigen::Vector3d mag_bias_;
 
     Eigen::Vector3d init_velocity_;
     Eigen::Vector3d init_twb_;

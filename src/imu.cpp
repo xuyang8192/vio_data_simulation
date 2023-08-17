@@ -49,7 +49,8 @@ Eigen::Matrix3d eulerRates2bodyRates(Eigen::Vector3d eulerAngles)
 IMU::IMU(Param p): param_(p)
 {
     gyro_bias_ = Eigen::Vector3d::Zero();
-    acc_bias_ = Eigen::Vector3d::Zero();
+    acc_bias_  = Eigen::Vector3d::Zero();
+    mag_bias_  = Eigen::Vector3d::Zero();
 }
 
 void IMU::addIMUnoise(MotionData& data)
@@ -66,6 +67,10 @@ void IMU::addIMUnoise(MotionData& data)
     Eigen::Matrix3d acc_sqrt_cov = param_.acc_noise_sigma * Eigen::Matrix3d::Identity();
     data.imu_acc = data.imu_acc + acc_sqrt_cov * noise_acc / sqrt( param_.imu_timestep ) + acc_bias_;
 
+    Eigen::Vector3d noise_mag(noise(generator_),noise(generator_),noise(generator_));
+    Eigen::Matrix3d mag_sqrt_cov = param_.mag_noise_sigma * Eigen::Matrix3d::Identity();
+    data.imu_mag = data.imu_mag + mag_sqrt_cov * noise_mag / sqrt( param_.imu_timestep ) + mag_bias_;
+
     // gyro_bias update
     Eigen::Vector3d noise_gyro_bias(noise(generator_),noise(generator_),noise(generator_));
     gyro_bias_ += param_.gyro_bias_sigma * sqrt(param_.imu_timestep ) * noise_gyro_bias;
@@ -76,6 +81,10 @@ void IMU::addIMUnoise(MotionData& data)
     acc_bias_ += param_.acc_bias_sigma * sqrt(param_.imu_timestep ) * noise_acc_bias;
     data.imu_acc_bias = acc_bias_;
 
+    // mag_bias update
+    Eigen::Vector3d noise_mag_bias(noise(generator_),noise(generator_),noise(generator_));
+    mag_bias_ += param_.mag_bias_sigma * sqrt(param_.imu_timestep ) * noise_mag_bias;
+    data.imu_mag_bias = mag_bias_;
 }
 
 MotionData IMU::MotionModel(double t)
@@ -87,12 +96,12 @@ MotionData IMU::MotionModel(double t)
     float ellipse_y = 20;
     float z = 1;           // z轴做sin运动
     float K1 = 10;          // z轴的正弦频率是x，y的k1倍
-    float K = M_PI/ 10;    // 20 * K = 2pi 　　由于我们采取的是时间是20s, 系数K控制yaw正好旋转一圈，运动一周
+    float K = M_PI/ 10;    // 20 * K = 2pi   由于我们采取的是时间是20s, 系数K控制yaw正好旋转一圈，运动一周
 
     // translation
     // twb:  body frame in world frame
     Eigen::Vector3d position( ellipse_x * cos( K * t) + 5, ellipse_y * sin( K * t) + 5,  z * sin( K1 * K * t ) + 5);
-    Eigen::Vector3d dp(- K * ellipse_x * sin(K*t),  K * ellipse_y * cos(K*t), z*K1*K * cos(K1 * K * t));              // position导数　in world frame
+    Eigen::Vector3d dp(- K * ellipse_x * sin(K*t),  K * ellipse_y * cos(K*t), z*K1*K * cos(K1 * K * t));              // position导数 in world frame
     double K2 = K*K;
     Eigen::Vector3d ddp( -K2 * ellipse_x * cos(K*t),  -K2 * ellipse_y * sin(K*t), -z*K1*K1*K2 * sin(K1 * K * t));     // position二阶导数
 
@@ -108,11 +117,17 @@ MotionData IMU::MotionModel(double t)
     Eigen::Matrix3d Rwb = euler2Rotation(eulerAngles);         // body frame to world frame
     Eigen::Vector3d imu_gyro = eulerRates2bodyRates(eulerAngles) * eulerAnglesRates;   //  euler rates trans to body gyro
 
-    Eigen::Vector3d gn (0,0,-9.81);                                   //  gravity in navigation frame(ENU)   ENU (0,0,-9.81)  NED(0,0,9,81)
-    Eigen::Vector3d imu_acc = Rwb.transpose() * ( ddp -  gn );  //  Rbw * Rwn * gn = gs
+    // Gravity in WND coord.
+    Eigen::Vector3d gravity_world(0, 0, 9.81);
+    Eigen::Vector3d imu_acc = Rwb.transpose() * (ddp + gravity_world);  //  Rbw * Rwn * gn = gs
+
+    // Geomagnetic field in WND coord.
+    Eigen::Vector3d geomagnetic_field_world(0, 50, 0);
+    Eigen::Vector3d imu_mag = Rwb.transpose() * geomagnetic_field_world;
 
     data.imu_gyro = imu_gyro;
     data.imu_acc = imu_acc;
+    data.imu_mag = imu_mag;
     data.Rwb = Rwb;
     data.twb = position;
     data.imu_velocity = dp;
@@ -135,7 +150,7 @@ void IMU::testImu(std::string src, std::string dist)
     Eigen::Vector3d Pwb = init_twb_;              // position :    from  imu measurements
     Eigen::Quaterniond Qwb(init_Rwb_);            // quaterniond:  from imu measurements
     Eigen::Vector3d Vw = init_velocity_;          // velocity  :   from imu measurements
-    Eigen::Vector3d gw(0,0,-9.81);    // ENU frame
+    Eigen::Vector3d gravity_world(0, 0, 9.81);    // WND frame
     Eigen::Vector3d temp_a;
     Eigen::Vector3d theta;
     for (int i = 1; i < imudata.size(); ++i) {
@@ -152,14 +167,14 @@ void IMU::testImu(std::string src, std::string dist)
         dq.normalize();
         
         /// imu 动力学模型 欧拉积分
-        Eigen::Vector3d acc_w = Qwb * (imupose.imu_acc) + gw;  // aw = Rwb * ( acc_body - acc_bias ) + gw
+        Eigen::Vector3d acc_w = Qwb * (imupose.imu_acc) + gravity_world;  // aw = Rwb * ( acc_body - acc_bias ) + gw
         Qwb = Qwb * dq;
         Pwb = Pwb + Vw * dt + 0.5 * dt * dt * acc_w;
         Vw = Vw + acc_w * dt;
         
         /// 中值积分
 
-        //　按着imu postion, imu quaternion , cam postion, cam quaternion 的格式存储，由于没有cam，所以imu存了两次
+        // 按着imu postion, imu quaternion , cam postion, cam quaternion 的格式存储，由于没有cam，所以imu存了两次
         save_points<<imupose.timestamp<<" "
                    <<Qwb.w()<<" "
                    <<Qwb.x()<<" "

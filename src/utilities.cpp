@@ -122,6 +122,7 @@ void save_Pose(std::string filename, std::vector<MotionData> pose)
         Eigen::Vector3d t = data.twb;
         Eigen::Vector3d gyro = data.imu_gyro;
         Eigen::Vector3d acc = data.imu_acc;
+        Eigen::Vector3d mag = data.imu_mag;
 
         save_points<<time<<" "
                    <<q.w()<<" "
@@ -137,6 +138,9 @@ void save_Pose(std::string filename, std::vector<MotionData> pose)
                    <<acc(0)<<" "
                    <<acc(1)<<" "
                    <<acc(2)<<" "
+                   <<mag(0)<<" "
+                   <<mag(1)<<" "
+                   <<mag(2)<<" "
                    <<std::endl;
     }
 }
