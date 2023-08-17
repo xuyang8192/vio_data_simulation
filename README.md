@@ -1,7 +1,5 @@
 # imusim
-imu和cam数据仿真，用于vio算法测试，代码有任何问题都欢迎交流 heyijia_2013@163.com。
-
-we also create a ros_version in ros_version branch.
+This is a repo forked from https://github.com/HeYijia/vio_data_simulation, with minor adjustments to work on Windows. To use Python tools for plotting, we might choose Matplotlib\<=3.4.3 and Python 3.7 (the Matplotlib of version 3.5.0 to the newest 3.7.x would still fails to plot due to a bug).
 
 ![demo pic](https://github.com/HeYijia/vio_data_simulation/blob/master/bin/demo.png?raw=true)
 
