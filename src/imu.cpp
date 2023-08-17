@@ -2,6 +2,11 @@
 // Created by hyj on 18-1-19.
 //
 
+#ifdef WIN32
+    #define _USE_MATH_DEFINES
+#endif
+
+#include <cmath>
 #include <random>
 #include "imu.h"
 #include "utilities.h"
@@ -174,6 +179,6 @@ void IMU::testImu(std::string src, std::string dist)
 
     }
 
-    std::cout<<"test　end"<<std::endl;
+    std::cout<<"test end"<<std::endl;
 
 }

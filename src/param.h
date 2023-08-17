@@ -5,7 +5,7 @@
 #ifndef IMUSIM_PARAM_H
 #define IMUSIM_PARAM_H
 
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 
 class Param{
 

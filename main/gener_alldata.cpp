@@ -3,6 +3,7 @@
 //
 
 #include <fstream>
+#include <filesystem>
 #include <sys/stat.h>
 #include "../src/imu.h"
 #include "../src/utilities.h"
@@ -15,7 +16,7 @@ using Lines = std::vector<Line, Eigen::aligned_allocator<Line> >;
 void CreatePointsLines(Points& points, Lines& lines)
 {
     std::ifstream f;
-    f.open("house_model/house.txt");
+    f.open("house_model.txt");
 
     while(!f.eof())
     {
@@ -92,7 +93,12 @@ int main(){
     // std::cout << Qwb.coeffs().transpose() <<"\n"<<Qwb.toRotationMatrix() << std::endl;
 
     // 建立keyframe文件夹
-    mkdir("keyframe", 0777);
+    std::error_code ec;
+    std::filesystem::create_directory("keyframe", ec);
+    if (ec) {
+        std::cout << "Failed to create initial directory\n";
+        return -1;
+    }
 
     // 生成3d points
     Points points;

@@ -1,6 +1,11 @@
 *.py[cod]
 build/
+
 bin/keyframe/
 bin/*.txt
+bin/Debug/
+bin/Release/
+
 *~
 *.DS_Store
+.vscode/

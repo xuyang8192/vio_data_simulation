@@ -14,7 +14,7 @@ import transformations as tf
 
 import os
 #filepath=os.path.abspath('.')  #表示当前所处的文件夹的绝对路径
-filepath=os.path.abspath('..')+"/bin"  #表示当前所处的文件夹上一级文件夹的绝对路径
+filepath=os.path.abspath('..')  #表示当前所处的文件夹上一级文件夹的绝对路径
 
 point_id=[]
 x=[]
@@ -23,15 +23,15 @@ z=[]
 
 with open(filepath + '/all_points.txt', 'r') as f:
     data = f.readlines()  #txt中所有字符串读入data  
-  
+
     for line in data:  
         odom = line.split()        #将单个数据分隔开存好  
-        numbers_float = map(float, odom) #转化为浮点数  
+        numbers_float = list(map(float, odom)) #转化为浮点数  
         x.append( numbers_float[0] )
         y.append( numbers_float[1] )
         z.append( numbers_float[2] )
 
-    
+
 position = []
 quaterntions = []
 timestamp = []
@@ -41,7 +41,7 @@ with open(filepath + '/cam_pose.txt', 'r') as f:   #   imu_circle   imu_spline
     data = f.readlines()  #txt中所有字符串读入data    
     for line in data:  
         odom = line.split()        #将单个数据分隔开存好  
-        numbers_float = map(float, odom) #转化为浮点数  
+        numbers_float = list(map(float, odom)) #转化为浮点数  
 
         #timestamp.append( numbers_float[0])        
         quaterntions.append( [numbers_float[qw_index], numbers_float[qw_index+1],numbers_float[qw_index+2],numbers_float[qw_index+3]   ] )   # qw,qx,qy,qz
@@ -51,7 +51,7 @@ with open(filepath + '/cam_pose.txt', 'r') as f:   #   imu_circle   imu_spline
 ## plot 3d        
 fig = plt.figure()
 plt.ion()
-ax = fig.gca(projection='3d')
+ax = fig.add_subplot(projection='3d')
 
 ax.set_xlabel('X')     
 ax.set_ylabel('Y')
@@ -61,7 +61,7 @@ t = []
 for i in range(0,400,5):
     ax.clear()    
     ax.scatter(x, y, z,c='g')
-    
+
     x1=[]
     y1=[]
     z1=[]    
@@ -70,27 +70,27 @@ for i in range(0,400,5):
     p = position[i]
     for j in range(len(rpy)):
         drawCoordinateFrame(ax, rpy[j], t[j])    
-    
+
     s = filepath + '/keyframe/all_points_' +str(i)+'.txt'
     with open(s, 'r') as f:   
         data = f.readlines()  #txt中所有字符串读入data  
         for line in data:  
             odom = line.split()        #将单个数据分隔开存好  
-            numbers_float = map(float, odom) #转化为浮点数  
+            numbers_float = list(map(float, odom)) #转化为浮点数  
             x1.append( numbers_float[0] )
             y1.append( numbers_float[1] )
             z1.append( numbers_float[2] )
             
             ax.plot( [ numbers_float[0],   p[0]  ] , [ numbers_float[1], p[1] ] , zs=[ numbers_float[2], p[2] ] )
 
-    s = filepath + '/house_model/house.txt'
+    s = filepath + '/house_model.txt'
     with open(s, 'r') as f:
         data = f.readlines()  # txt中所有字符串读入data
         for line in data:
             odom = line.split()  # 将单个数据分隔开存好
-            numbers_float = map(float, odom)  # 转化为浮点数
+            numbers_float = list(map(float, odom))  # 转化为浮点数
             ax.plot([numbers_float[0], numbers_float[3]], [numbers_float[1], numbers_float[4]],'b' ,zs=[numbers_float[2], numbers_float[5]])
-        
+
     ax.scatter(x1, y1, z1,c='r',marker='^')
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
