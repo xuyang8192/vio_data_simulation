@@ -61,15 +61,18 @@ void IMU::addIMUnoise(MotionData& data)
 
     Eigen::Vector3d noise_gyro(noise(generator_),noise(generator_),noise(generator_));
     Eigen::Matrix3d gyro_sqrt_cov = param_.gyro_noise_sigma * Eigen::Matrix3d::Identity();
-    data.imu_gyro = data.imu_gyro + gyro_sqrt_cov * noise_gyro / sqrt( param_.imu_timestep ) + gyro_bias_;
+    Eigen::Vector3d delta_imu_gyro = gyro_sqrt_cov * noise_gyro / sqrt( param_.imu_timestep );
+    data.imu_gyro = data.imu_gyro + delta_imu_gyro + gyro_bias_;
 
     Eigen::Vector3d noise_acc(noise(generator_),noise(generator_),noise(generator_));
     Eigen::Matrix3d acc_sqrt_cov = param_.acc_noise_sigma * Eigen::Matrix3d::Identity();
-    data.imu_acc = data.imu_acc + acc_sqrt_cov * noise_acc / sqrt( param_.imu_timestep ) + acc_bias_;
+    Eigen::Vector3d delta_imu_acc = acc_sqrt_cov * noise_acc / sqrt( param_.imu_timestep );
+    data.imu_acc = data.imu_acc + delta_imu_acc + acc_bias_;
 
     Eigen::Vector3d noise_mag(noise(generator_),noise(generator_),noise(generator_));
     Eigen::Matrix3d mag_sqrt_cov = param_.mag_noise_sigma * Eigen::Matrix3d::Identity();
-    data.imu_mag = data.imu_mag + mag_sqrt_cov * noise_mag / sqrt( param_.imu_timestep ) + mag_bias_;
+    Eigen::Vector3d delta_imu_mag = mag_sqrt_cov * noise_mag / sqrt( param_.imu_timestep );
+    data.imu_mag = data.imu_mag + delta_imu_mag + mag_bias_;
 
     // gyro_bias update
     Eigen::Vector3d noise_gyro_bias(noise(generator_),noise(generator_),noise(generator_));
