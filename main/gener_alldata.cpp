@@ -113,7 +113,7 @@ int main(){
     // imu pose gyro acc
     std::vector< MotionData > imudata;
     std::vector< MotionData > imudata_noise;
-    for (float t = params.t_start; t<params.t_end;) {
+    for (double t = params.t_start; t < params.t_end; t += 1.0 / params.imu_frequency) {
         MotionData data = imuGen.MotionModel(t);
         imudata.push_back(data);
 
@@ -121,8 +121,6 @@ int main(){
         MotionData data_noise = data;
         imuGen.addIMUnoise(data_noise);
         imudata_noise.push_back(data_noise);
-
-        t += 1.0/params.imu_frequency;
     }
     imuGen.init_velocity_ = imudata[0].imu_velocity;
     imuGen.init_twb_ = imudata.at(0).twb;
@@ -135,7 +133,7 @@ int main(){
 
     // cam pose
     std::vector< MotionData > camdata;
-    for (float t = params.t_start; t<params.t_end;) {
+    for (double t = params.t_start; t < params.t_end; t += 1.0 / params.cam_frequency) {
 
         MotionData imu = imuGen.MotionModel(t);   // imu body frame to world frame motion
         MotionData cam;
@@ -145,7 +143,6 @@ int main(){
         cam.twb = imu.twb + imu.Rwb * params.t_bc; //  Tcw = Twb * Tbc ,  t = Rwb * tbc + twb
 
         camdata.push_back(cam);
-        t += 1.0/params.cam_frequency;
     }
     save_Pose("cam_pose.txt",camdata);
     save_Pose_asTUM("cam_pose_tum.txt",camdata);

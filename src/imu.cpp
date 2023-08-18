@@ -87,16 +87,15 @@ void IMU::addIMUnoise(MotionData& data)
     data.imu_mag_bias = mag_bias_;
 }
 
-MotionData IMU::MotionModel(double t)
+MotionData IMU::MotionModel(double t, bool enable_move)
 {
-
     MotionData data;
     // param
-    float ellipse_x = 15;
-    float ellipse_y = 20;
-    float z = 1;           // z轴做sin运动
-    float K1 = 10;          // z轴的正弦频率是x，y的k1倍
-    float K = M_PI/ 10;    // 20 * K = 2pi   由于我们采取的是时间是20s, 系数K控制yaw正好旋转一圈，运动一周
+    double ellipse_x = 15;
+    double ellipse_y = 20;
+    double z = 1;         // z轴做sin运动
+    double K1 = 10;       // z轴的正弦频率是x，y的k1倍
+    double K = M_PI / 10; // 20 * K = 2pi   由于我们采取的是时间是20s, 系数K控制yaw正好旋转一圈，运动一周
 
     // translation
     // twb:  body frame in world frame
@@ -119,7 +118,7 @@ MotionData IMU::MotionModel(double t)
 
     // Gravity in WND coord.
     Eigen::Vector3d gravity_world(0, 0, 9.81);
-    Eigen::Vector3d imu_acc = Rwb.transpose() * (ddp + gravity_world);  //  Rbw * Rwn * gn = gs
+    Eigen::Vector3d imu_acc = Rwb.transpose() * (int(enable_move) * ddp + gravity_world);  //  Rbw * Rwn * gn = gs
 
     // Geomagnetic field in WND coord.
     Eigen::Vector3d geomagnetic_field_world(0, 50, 0);
